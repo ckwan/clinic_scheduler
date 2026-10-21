@@ -4,3 +4,4 @@ backend/alembic.ini
 Instructions.md
 DEMO.md
 DESIGN.md
+backend/migrations/script.py.mako
