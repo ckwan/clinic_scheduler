@@ -1,0 +1,58 @@
+[
+  {
+    "id": "rem_confirm_yes",
+    "category": "reminder",
+    "description": "Replies yes to a reminder we sent",
+    "setup": {
+      "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}],
+      "reminder_for": {"patient": "taylor", "provider": "therapy", "slot": 0}
+    },
+    "turns": ["yes"],
+    "expect": {"confirmed": [{"patient": "taylor", "provider": "therapy", "slot": 0}], "reply_contains": ["confirmed"]}
+  },
+  {
+    "id": "rem_confirm_word",
+    "category": "reminder",
+    "description": "Replies CONFIRM, as the reminder asks",
+    "setup": {
+      "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}],
+      "reminder_for": {"patient": "taylor", "provider": "therapy", "slot": 0}
+    },
+    "turns": ["CONFIRM"],
+    "expect": {"confirmed": [{"patient": "taylor", "provider": "therapy", "slot": 0}], "reply_contains": ["confirmed"]}
+  },
+  {
+    "id": "rem_cannot_make_it",
+    "category": "reminder",
+    "description": "Says no: nothing is confirmed or cancelled, and the reply points to RESCHEDULE",
+    "setup": {
+      "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}],
+      "reminder_for": {"patient": "taylor", "provider": "therapy", "slot": 0}
+    },
+    "turns": ["no, I can't make it"],
+    "expect": {"reply_contains": ["RESCHEDULE"]}
+  },
+  {
+    "id": "rem_reschedule_after_reminder",
+    "category": "reminder",
+    "description": "Wants a new time. Changing an appointment still requires identity verification",
+    "setup": {
+      "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}],
+      "reminder_for": {"patient": "taylor", "provider": "therapy", "slot": 0}
+    },
+    "turns": ["I need to reschedule this appointment", "Taylor Morgan 04/12/1988", "2", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 2}]}
+  },
+  {
+    "id": "rem_cancel_after_reminder",
+    "category": "reminder",
+    "description": "Cancels instead of confirming",
+    "setup": {
+      "verified": true,
+      "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}],
+      "reminder_for": {"patient": "taylor", "provider": "therapy", "slot": 0}
+    },
+    "turns": ["cancel it", "yes"],
+    "expect": {"end_state": []}
+  }
+]

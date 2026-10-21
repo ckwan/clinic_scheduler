@@ -1,0 +1,80 @@
+[
+  {
+    "id": "rc_cancel_single",
+    "category": "reschedule_cancel",
+    "description": "Cancel the only appointment",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["Please cancel my appointment", "yes"],
+    "expect": {"end_state": []}
+  },
+  {
+    "id": "rc_cancel_unverified_full_flow",
+    "category": "reschedule_cancel",
+    "description": "Cancel, with identity verification along the way",
+    "setup": {"bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["I need to cancel my appointment", "Taylor Morgan 04/12/1988", "yes"],
+    "expect": {"end_state": []}
+  },
+  {
+    "id": "rc_cancel_choose_second",
+    "category": "reschedule_cancel",
+    "description": "Two appointments, cancel the second",
+    "setup": {
+      "verified": true,
+      "bookings": [
+        {"patient": "taylor", "provider": "therapy", "slot": 0},
+        {"patient": "taylor", "provider": "therapy", "slot": 3}
+      ]
+    },
+    "turns": ["cancel an appointment", "2", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  },
+  {
+    "id": "rc_cancel_then_decline",
+    "category": "reschedule_cancel",
+    "description": "Says no at the confirmation, so nothing changes",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["cancel my appointment", "no"],
+    "expect": {"end_state": "unchanged", "reply_contains": ["kept your appointment"]}
+  },
+  {
+    "id": "rc_reschedule_basic",
+    "category": "reschedule_cancel",
+    "description": "Move to the second offered slot",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["I need to reschedule my appointment", "2", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 2}]}
+  },
+  {
+    "id": "rc_reschedule_third_option",
+    "category": "reschedule_cancel",
+    "description": "Move to the third offered slot",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["can I move my appointment to a different time", "3", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 3}]}
+  },
+  {
+    "id": "rc_list_appointments",
+    "category": "reschedule_cancel",
+    "description": "Ask what is coming up",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["what appointments do I have coming up?"],
+    "expect": {"reply_contains": ["upcoming appointments"]}
+  },
+  {
+    "id": "rc_cancel_when_none",
+    "category": "reschedule_cancel",
+    "description": "Nothing to cancel",
+    "setup": {"verified": true},
+    "turns": ["cancel my appointment"],
+    "expect": {"reply_contains": ["don't see any upcoming"]}
+  },
+  {
+    "id": "rc_stray_yes",
+    "category": "reschedule_cancel",
+    "description": "A lone 'yes' with nothing pending must not do anything",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["yes"],
+    "expect": {"end_state": "unchanged"}
+  }
+]

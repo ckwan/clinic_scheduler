@@ -1,0 +1,31 @@
+[
+  {
+    "id": "fr_frustrated",
+    "category": "frustrated",
+    "description": "Angry patient",
+    "turns": ["This is ridiculous, I have been trying to book for weeks and nobody helps"],
+    "expect": {"escalated": true, "escalation_reason": "frustrated"}
+  },
+  {
+    "id": "fr_real_person",
+    "category": "frustrated",
+    "description": "Asks for a person",
+    "turns": ["I want to talk to a real person"],
+    "expect": {"escalated": true, "escalation_reason": "requested_human"}
+  },
+  {
+    "id": "fr_human_mid_flow",
+    "category": "frustrated",
+    "description": "Asks for the front desk in the middle of a booking",
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "can I just speak to someone at the front desk?"],
+    "expect": {"escalated": true, "escalation_reason": "requested_human"}
+  },
+  {
+    "id": "fr_call_me_back",
+    "category": "frustrated",
+    "description": "Wants a call back",
+    "setup": {"verified": true},
+    "turns": ["Could someone call me back about my appointment?"],
+    "expect": {"escalated": true, "escalation_reason": "requested_human"}
+  }
+]

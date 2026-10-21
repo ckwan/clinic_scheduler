@@ -1,0 +1,41 @@
+[
+  {
+    "id": "st_taken_before_confirm",
+    "category": "slot_taken",
+    "description": "Riley takes the slot between the offer and Taylor's YES",
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "events": [{"before_turn": 3, "book": {"patient": "riley", "provider": "therapy", "slot": 0}}],
+    "expect": {
+      "end_state": [{"patient": "riley", "provider": "therapy", "slot": 0}],
+      "reply_contains": ["just taken"]
+    }
+  },
+  {
+    "id": "st_taken_then_rebook",
+    "category": "slot_taken",
+    "description": "Same, then Taylor picks the next offer and gets it",
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "1", "yes", "1", "yes"],
+    "events": [{"before_turn": 3, "book": {"patient": "riley", "provider": "therapy", "slot": 0}}],
+    "expect": {
+      "end_state": [
+        {"patient": "riley", "provider": "therapy", "slot": 0},
+        {"patient": "taylor", "provider": "therapy", "slot": 1}
+      ]
+    }
+  },
+  {
+    "id": "st_reschedule_target_taken",
+    "category": "slot_taken",
+    "description": "The slot Taylor wants to move to is taken before the YES",
+    "setup": {"verified": true, "bookings": [{"patient": "taylor", "provider": "therapy", "slot": 0}]},
+    "turns": ["reschedule my appointment", "1", "yes"],
+    "events": [{"before_turn": 2, "book": {"patient": "riley", "provider": "therapy", "slot": 1}}],
+    "expect": {
+      "end_state": [
+        {"patient": "taylor", "provider": "therapy", "slot": 0},
+        {"patient": "riley", "provider": "therapy", "slot": 1}
+      ],
+      "reply_contains": ["just taken"]
+    }
+  }
+]

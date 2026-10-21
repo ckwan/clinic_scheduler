@@ -1,0 +1,23 @@
+[
+  {
+    "id": "un_greeting",
+    "category": "unclear",
+    "description": "Just 'hi' gets a menu, not an escalation",
+    "turns": ["hi"],
+    "expect": {"reply_contains": ["book, change, or cancel"]}
+  },
+  {
+    "id": "un_gibberish_twice",
+    "category": "unclear",
+    "description": "Two unintelligible messages in a row escalate",
+    "turns": ["hi", "asdf qwerty"],
+    "expect": {"escalated": true, "escalation_reason": "low_confidence"}
+  },
+  {
+    "id": "un_greeting_then_task",
+    "category": "unclear",
+    "description": "A greeting followed by a real request still works",
+    "turns": ["hello", "book a therapy session", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  }
+]

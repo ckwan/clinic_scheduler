@@ -1,0 +1,46 @@
+[
+  {
+    "id": "id_wrong_dob_twice",
+    "category": "identity",
+    "description": "Two wrong dates of birth escalate to staff",
+    "turns": ["I want to book therapy", "Taylor Morgan 01/01/1990", "Taylor Morgan 02/02/1991"],
+    "expect": {"escalated": true, "escalation_reason": "verification_failed"}
+  },
+  {
+    "id": "id_wrong_then_right",
+    "category": "identity",
+    "description": "One wrong attempt, then correct details; the booking continues",
+    "turns": ["book a therapy session", "Taylor Morgan 01/01/1990", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  },
+  {
+    "id": "id_details_across_messages",
+    "category": "identity",
+    "description": "First name, last name, and date of birth in three separate messages",
+    "turns": ["book a checkup", "Taylor", "Morgan", "04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "pcp", "slot": 0}]}
+  },
+  {
+    "id": "id_unknown_number_correct_details",
+    "category": "identity",
+    "description": "Right name and birthday, but from a phone number we do not know",
+    "setup": {"sender": "unknown"},
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "Taylor Morgan 04/12/1988"],
+    "expect": {"escalated": true, "escalation_reason": "verification_failed"}
+  },
+  {
+    "id": "id_other_patients_phone",
+    "category": "identity",
+    "description": "Riley's phone with Taylor's details",
+    "setup": {"sender": "riley"},
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "Taylor Morgan 04/12/1988"],
+    "expect": {"escalated": true, "escalation_reason": "verification_failed", "reply_not_contains": ["Taylor"]}
+  },
+  {
+    "id": "id_written_out_date",
+    "category": "identity",
+    "description": "Date of birth written as 'April 12 1988'",
+    "turns": ["book therapy", "Taylor Morgan, April 12 1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  }
+]

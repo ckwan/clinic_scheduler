@@ -1,0 +1,30 @@
+[
+  {
+    "id": "at_friday",
+    "category": "ambiguous_time",
+    "description": "'Friday' resolves to Oct 23, so option 1 is the 5:00 AM Friday slot",
+    "turns": ["I want therapy on Friday", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 3}]}
+  },
+  {
+    "id": "at_next_monday",
+    "category": "ambiguous_time",
+    "description": "'Next Monday' resolves to Oct 26",
+    "turns": ["Can I get a therapy appointment next Monday?", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 5}]}
+  },
+  {
+    "id": "at_tomorrow_after_8am",
+    "category": "ambiguous_time",
+    "description": "Tomorrow after 8 AM skips the 5 and 6 AM slots, so option 1 is the 9 AM slot",
+    "turns": ["I'd like to book therapy tomorrow, anything after 8am works", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 2}]}
+  },
+  {
+    "id": "at_sunday_no_openings",
+    "category": "ambiguous_time",
+    "description": "Nothing is open on Sunday, so the agent must say so instead of offering other days",
+    "turns": ["Book me a therapy session this Sunday", "Taylor Morgan 04/12/1988"],
+    "expect": {"end_state": "unchanged", "reply_contains": ["couldn't find any openings"]}
+  }
+]

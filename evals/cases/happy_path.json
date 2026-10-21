@@ -1,0 +1,61 @@
+[
+  {
+    "id": "hp_therapy_basic",
+    "category": "happy_path",
+    "description": "Book a therapy session, identity sent as a separate message, pick option 2",
+    "turns": ["Hi, I'd like to book a therapy session", "Taylor Morgan 04/12/1988", "2", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 1}]}
+  },
+  {
+    "id": "hp_identity_in_first_message",
+    "category": "happy_path",
+    "description": "Intent and identity in the very first message",
+    "turns": ["Hi this is Taylor Morgan, born 04/12/1988. I need to book a therapy session.", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  },
+  {
+    "id": "hp_checkup",
+    "category": "happy_path",
+    "description": "Checkup goes to primary care",
+    "turns": ["I need a checkup", "Taylor Morgan 04/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "pcp", "slot": 0}]}
+  },
+  {
+    "id": "hp_annual_wellness",
+    "category": "happy_path",
+    "description": "Annual wellness visit for a different patient",
+    "setup": {"sender": "riley"},
+    "turns": ["Can I schedule my annual wellness visit?", "Riley Brooks 09/03/1992", "2", "yes"],
+    "expect": {"end_state": [{"patient": "riley", "provider": "pcp", "slot": 1}]}
+  },
+  {
+    "id": "hp_casual_phrasing",
+    "category": "happy_path",
+    "description": "Casual wording and 'yes please'",
+    "setup": {"sender": "casey"},
+    "turns": ["hey can i see a therapist this week", "Casey Nguyen 01/25/1979", "1", "yes please"],
+    "expect": {"end_state": [{"patient": "casey", "provider": "therapy", "slot": 0}]}
+  },
+  {
+    "id": "hp_pick_third_option",
+    "category": "happy_path",
+    "description": "Chooses the third offered slot",
+    "turns": ["book therapy", "Taylor Morgan 04/12/1988", "3", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 2}]}
+  },
+  {
+    "id": "hp_already_verified",
+    "category": "happy_path",
+    "description": "Conversation is already verified, so no identity questions",
+    "setup": {"verified": true},
+    "turns": ["I want to book a therapy session", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  },
+  {
+    "id": "hp_lowercase_identity",
+    "category": "happy_path",
+    "description": "Lowercase name and a one digit month",
+    "turns": ["book a therapy session", "taylor morgan 4/12/1988", "1", "yes"],
+    "expect": {"end_state": [{"patient": "taylor", "provider": "therapy", "slot": 0}]}
+  }
+]
