@@ -1,0 +1,6 @@
+.env
+backend/pyproject.toml
+backend/alembic.ini
+Instructions.md
+DEMO.md
+DESIGN.md

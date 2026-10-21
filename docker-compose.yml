@@ -1,0 +1,139 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: clinic_scheduler
+      POSTGRES_PASSWORD: clinic_scheduler
+      POSTGRES_DB: clinic_scheduler
+    ports:
+      - "5432:5432"
+    volumes:
+      - app_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinic_scheduler"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  temporal-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    volumes:
+      - temporal_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  temporal:
+    image: temporalio/auto-setup:1.24
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: temporal-db
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/ui:2.26.2
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports:
+      - "8233:8233"
+
+  # ---- The application. Start everything with:  make up-all  (docker compose --profile app) ----
+
+  migrate:
+    build: ./backend
+    profiles: ["app"]
+    command: ["alembic", "upgrade", "head"]
+    environment: &app-env
+      DATABASE_URL: postgresql+psycopg://clinic_scheduler:clinic_scheduler@db:5432/clinic_scheduler
+      TEMPORAL_ADDRESS: temporal:7233
+      EVAL_RESULTS_DIR: /evals/results
+      # Reach Ollama running natively on your machine. Use http://ollama:11434 with the
+      # "ollama" profile instead if you run it in a container.
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    env_file:
+      - path: .env
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: ./backend
+    profiles: ["app"]
+    environment: *app-env
+    env_file:
+      - path: .env
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./evals:/evals:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    profiles: ["app"]
+    command: ["python", "-m", "app.workflows.worker"]
+    environment: *app-env
+    env_file:
+      - path: .env
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_started
+    # Temporal takes a few seconds to accept connections after it starts, so retry.
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    profiles: ["app"]
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Optional: run Ollama in a container instead of installing it natively.
+  #   docker compose --profile ollama up -d
+  # Native install is faster on a Mac (uses the GPU): https://ollama.com/download
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  app_db_data:
+  temporal_db_data:
+  ollama_data:
