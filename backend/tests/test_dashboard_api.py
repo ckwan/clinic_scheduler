@@ -108,3 +108,57 @@ def test_eval_runs_are_listed_and_fetched(client, tmp_path):
     assert client.get("/api/evals/x").json()["model"] == "m"
     assert client.get("/api/evals/nope").status_code == 404
     assert client.get("/api/evals/..%2Fsecrets").status_code == 404
+
+
+# ------------------------------------------------------------ staff escalation
+
+
+def test_staff_can_escalate_a_live_conversation(client, session, conversation):
+    add_message(session, conversation, "inbound", "hello")
+    r = client.post(
+        f"/api/conversations/{conversation.id}/escalate",
+        json={"reason": "staff_agent_confused", "staff_name": "Dana"},
+    )
+    assert r.status_code == 200 and r.json()["status"] == "open" and r.json()["reason"] == "staff_agent_confused"
+    session.refresh(conversation)
+    assert conversation.state == "escalated"
+
+    audit = [a for a in session.scalars(select(models.AuditLog)) if a.action == "escalated"]
+    assert [a.actor for a in audit] == ["staff:Dana"]  # recorded as staff, not as the agent
+    assert [e["conversation_id"] for e in client.get("/api/escalations?status=active").json()] == [str(conversation.id)]
+
+
+def test_the_agent_stays_silent_after_a_staff_escalation(client, session, world, conversation):
+    from app.agent.runner import handle_inbound_message
+    from app.agent.testing import ScriptedLLM
+    from tests.conftest import NOW
+
+    client.post(f"/api/conversations/{conversation.id}/escalate", json={"reason": "staff_other"})
+    llm = ScriptedLLM()  # would raise if the agent were asked anything
+    assert handle_inbound_message(session, world.clinic, conversation.phone_number, "hello?", llm, now=NOW) is None
+
+
+def test_staff_can_reply_after_escalating(client, session, sms, conversation):
+    client.post(f"/api/conversations/{conversation.id}/escalate", json={"reason": "staff_patient_needs_help"})
+    sent = client.post(f"/api/conversations/{conversation.id}/reply", json={"body": "Calling you now."})
+    assert sent.status_code == 200 and sms.sent[0][1] == "Calling you now."
+
+
+def test_cannot_escalate_twice_or_a_closed_conversation(client, session, conversation):
+    url = f"/api/conversations/{conversation.id}/escalate"
+    assert client.post(url, json={"reason": "staff_other"}).status_code == 200
+    assert client.post(url, json={"reason": "staff_other"}).status_code == 409
+
+    conversation.state = "closed"
+    session.flush()
+    assert client.post(url, json={"reason": "staff_other"}).status_code == 409
+
+
+def test_escalation_reason_must_be_one_of_the_known_ones(client, conversation):
+    r = client.post(f"/api/conversations/{conversation.id}/escalate", json={"reason": "because"})
+    assert r.status_code == 422
+
+
+def test_escalating_an_unknown_conversation_is_404(client):
+    r = client.post("/api/conversations/00000000-0000-0000-0000-000000000000/escalate", json={"reason": "staff_other"})
+    assert r.status_code == 404

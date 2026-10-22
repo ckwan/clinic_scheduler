@@ -38,7 +38,7 @@ def run(to: str, client=None, wait_seconds: int = 20, sleep=time.sleep) -> int:
 
     try:
         message = client.messages.create(
-            to=to, from_=settings.twilio_from_number, body="clinic_scheduler test message. No reply needed."
+            to=to, from_=settings.twilio_from_number, body="Clinic Scheduler test message. No reply needed."
         )
     except Exception as exc:  # Twilio errors carry a code and a helpful message
         print(f"Send failed: {exc}")

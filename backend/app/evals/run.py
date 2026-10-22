@@ -30,7 +30,7 @@ def _git_sha() -> str | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run clinic_scheduler evals")
+    parser = argparse.ArgumentParser(description="Run Clinic Scheduler evals")
     parser.add_argument("--llm", choices=list(PROVIDERS), default="heuristic")
     parser.add_argument("--model", help="model name for ollama or anthropic (default from settings)")
     parser.add_argument("--label", help="name for this run (default: <llm>-run)")

@@ -73,7 +73,9 @@ def add_message(
     return message
 
 
-def escalate(session: Session, conversation: Conversation, reason: str) -> Escalation:
+def escalate(
+    session: Session, conversation: Conversation, reason: str, actor: str = "agent"
+) -> Escalation:
     """Hand the conversation to a human. Safe to call twice: returns the open escalation."""
     existing = session.scalar(
         select(Escalation).where(
@@ -87,6 +89,6 @@ def escalate(session: Session, conversation: Conversation, reason: str) -> Escal
     session.add(escalation)
     conversation.state = "escalated"
     conversation.outcome = "escalated"
-    log_audit(session, conversation.id, "agent", "escalated", {"reason": reason})
+    log_audit(session, conversation.id, actor, "escalated", {"reason": reason})
     session.flush()
     return escalation

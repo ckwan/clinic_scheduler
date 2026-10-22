@@ -2,6 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { api } from '../api'
 import { Badge, Card, Status, label, stateTone, useAsync, when } from '../ui'
 
+const ESCALATION_REASONS = [
+  ['staff_agent_confused', 'The agent is confused or stuck'],
+  ['staff_patient_needs_help', 'The patient needs a person'],
+  ['staff_other', 'Other'],
+] as const
+
 const BUBBLE = {
   patient: 'self-start bg-slate-200 dark:bg-slate-800',
   agent: 'self-end bg-sky-600 text-white',
@@ -13,6 +19,23 @@ export default function ConversationDetail({ id, staffName }: { id: string; staf
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reason, setReason] = useState<string>(ESCALATION_REASONS[0][0])
+  const [escalating, setEscalating] = useState(false)
+  const [escalateError, setEscalateError] = useState<string | null>(null)
+
+  async function escalate() {
+    setEscalating(true)
+    setEscalateError(null)
+    try {
+      await api.escalate(id, reason, staffName)
+      detail.reload()
+    } catch (err) {
+      setEscalateError(err instanceof Error ? err.message : 'Could not escalate')
+      detail.reload()
+    } finally {
+      setEscalating(false)
+    }
+  }
 
   async function send(e: FormEvent) {
     e.preventDefault()
@@ -62,8 +85,24 @@ export default function ConversationDetail({ id, staffName }: { id: string; staf
                     <input value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} placeholder={`Reply as ${staffName}…`} aria-label="Reply to patient" className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm dark:border-slate-700" />
                     <button disabled={sending || !text.trim()} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Send SMS</button>
                   </form>
+                ) : c.state === 'closed' ? (
+                  <p className="mt-4 text-xs text-slate-500">This conversation is closed.</p>
                 ) : (
-                  <p className="mt-4 text-xs text-slate-500">You can reply only to escalated conversations, so staff never talk over the agent.</p>
+                  <div className="mt-4 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                    <p className="mb-2 text-sm font-medium">Hand this conversation to a person</p>
+                    <p className="mb-3 text-xs text-slate-500">
+                      The agent stops replying, and the conversation moves to Needs a human. You can then text the patient from here.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select aria-label="Reason for escalating" value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-lg border border-slate-300 bg-transparent px-2 py-1.5 text-sm dark:border-slate-700">
+                        {ESCALATION_REASONS.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+                      </select>
+                      <button disabled={escalating} onClick={escalate} className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                        Escalate to a human
+                      </button>
+                    </div>
+                    {escalateError && <p role="alert" className="mt-2 text-sm text-red-600">{escalateError}</p>}
+                  </div>
                 )}
                 {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
               </Card>

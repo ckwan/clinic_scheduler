@@ -12,6 +12,8 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 from uuid import UUID
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -23,7 +25,7 @@ from app.db import get_session
 from app.agent import replies
 from app.models import Appointment, AuditLog, Clinic, Conversation, Escalation, Message, Patient, Provider, Slot
 from app.services import optout
-from app.services.conversations import add_message, as_utc, get_or_create_conversation, log_audit, utcnow
+from app.services.conversations import add_message, escalate, as_utc, get_or_create_conversation, log_audit, utcnow
 
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parents[3] / "evals" / "results"
 SUCCESS_OUTCOMES = {"booked", "cancelled", "rescheduled"}
@@ -181,6 +183,31 @@ def staff_reply(
     log_audit(session, c.id, f"staff:{reply.staff_name}", "human_reply", {"message_id": str(message.id)})
     session.commit()
     return {"id": str(message.id)}
+
+
+class StaffEscalation(BaseModel):
+    reason: Literal["staff_agent_confused", "staff_patient_needs_help", "staff_other"]
+    staff_name: str = Field(default="staff", min_length=1, max_length=100)
+
+
+@router.post("/conversations/{conversation_id}/escalate")
+def staff_escalate(
+    conversation_id: UUID, body: StaffEscalation, session: Session = Depends(get_session)
+) -> dict:
+    """Staff pull a conversation away from the agent. Same effect as an automatic escalation:
+    the agent stops replying, and it appears in the review queue, where staff can take over
+    and text the patient."""
+    c = session.get(Conversation, conversation_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if c.state == "closed":
+        raise HTTPException(status_code=409, detail="This conversation is closed")
+    if c.state == "escalated":
+        raise HTTPException(status_code=409, detail="Already escalated")
+
+    escalation = escalate(session, c, body.reason, actor=f"staff:{body.staff_name}")
+    session.commit()
+    return _escalation_row(escalation)
 
 
 # ------------------------------------------------------------ escalations

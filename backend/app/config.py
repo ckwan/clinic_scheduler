@@ -1,10 +1,21 @@
+import os
+from pathlib import Path
+
+from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+# The README puts .env in the repository root, but the API, worker and tests are started from
+# backend/. Look in both places (backend/.env wins if both exist). Variables already set in the
+# shell win over either file. In Docker neither file exists and Compose sets the environment.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ENV_FILES = (str(REPO_ROOT / ".env"), ".env")
 
-    database_url: str = "postgresql+psycopg://clinic_scheduler:clinic_scheduler@localhost:5432/clinic_scheduler"
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=ENV_FILES, extra="ignore")
+
+    database_url: str = "postgresql+psycopg://clinicline:clinicline@localhost:5432/clinicline"
     temporal_address: str = "localhost:7233"
 
     twilio_account_sid: str = ""
@@ -28,7 +39,7 @@ class Settings(BaseSettings):
     # How replies reach the patient: "twiml" answers inside the webhook response;
     # "temporal" hands the message to a durable workflow that sends the reply with retries.
     reply_mode: str = "twiml"
-    temporal_task_queue: str = "clinic_scheduler"
+    temporal_task_queue: str = "clinicline"
 
     # Dashboard. If dashboard_token is set, /api requires "Authorization: Bearer <token>".
     dashboard_token: str = ""
@@ -36,3 +47,32 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# The LangSmith SDK reads real environment variables only. pydantic-settings reads .env into the
+# Settings object but does not export it, so LANGSMITH_TRACING=true in .env used to do nothing
+# when running outside Docker. This copies the LangSmith variables across (without overriding
+# anything already set in the shell) and picks a default project name.
+LANGSMITH_VARS = (
+    "LANGSMITH_TRACING",
+    "LANGSMITH_API_KEY",
+    "LANGSMITH_PROJECT",
+    "LANGSMITH_ENDPOINT",  # EU accounts use https://eu.api.smith.langchain.com
+    "LANGSMITH_WORKSPACE_ID",  # needed for organization scoped API keys
+)
+DEFAULT_LANGSMITH_PROJECT = "clinic-scheduler"
+
+
+def export_langsmith_env(env_files: tuple[str, ...] = ENV_FILES) -> None:
+    values: dict = {}
+    for path in env_files:  # later files override earlier ones, matching Settings
+        if os.path.exists(path):
+            values.update({k: v for k, v in dotenv_values(path).items() if v})
+    for name in LANGSMITH_VARS:
+        if not os.environ.get(name) and values.get(name):
+            os.environ[name] = values[name]
+    if not os.environ.get("LANGSMITH_PROJECT"):
+        os.environ["LANGSMITH_PROJECT"] = DEFAULT_LANGSMITH_PROJECT
+
+
+export_langsmith_env()

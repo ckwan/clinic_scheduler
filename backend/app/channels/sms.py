@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from uuid import uuid4
 from typing import Protocol
 
+from langsmith import traceable
+
 from app.config import settings
 
 
@@ -26,12 +28,19 @@ class MockSmsSender:
         return f"mock-{uuid4().hex[:16]}"
 
 
+def _send_inputs(inputs: dict) -> dict:
+    """Trace the send without the phone number or message text."""
+    to = inputs.get("to", "")
+    return {"to": "***" + to[-4:], "characters": len(inputs.get("body", ""))}
+
+
 class TwilioSmsSender:
     def __init__(self) -> None:
         from twilio.rest import Client
 
         self._client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
 
+    @traceable(name="twilio_send_sms", run_type="tool", process_inputs=_send_inputs)
     def send(self, to: str, body: str) -> str:
         extra = {}
         if settings.public_base_url:  # lets Twilio report delivered / failed back to us

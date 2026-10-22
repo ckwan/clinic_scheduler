@@ -155,6 +155,8 @@ export const api = {
   conversation: (id: string) => request<ConversationDetail>(`/conversations/${id}`),
   reply: (id: string, body: string, staff_name: string) =>
     post<{ id: string }>(`/conversations/${id}/reply`, { body, staff_name }),
+  escalate: (id: string, reason: string, staff_name: string) =>
+    post<Escalation>(`/conversations/${id}/escalate`, { reason, staff_name }),
   escalations: (status = 'active') => request<Escalation[]>(`/escalations?status=${status}`),
   take: (id: string, staff_name: string) => post<Escalation>(`/escalations/${id}/take`, { staff_name }),
   resolve: (id: string) => post<Escalation>(`/escalations/${id}/resolve`),

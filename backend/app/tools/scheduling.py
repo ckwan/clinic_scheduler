@@ -11,6 +11,7 @@ from typing import Any, Callable, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError
+from langsmith import trace
 from sqlalchemy.orm import Session
 
 from app.models import Conversation
@@ -202,6 +203,23 @@ def execute_tool(
     if name not in TOOLS:
         return ToolResult(ok=False, error_code="unknown_tool", message=f"Unknown tool: {name}")
 
+    with trace(name=f"tool:{name}", run_type="tool", inputs=_traced_args(raw_args)) as run:
+        result = _execute(session, conversation, name, raw_args, now)
+        run.end(outputs={"ok": result.ok, "error_code": result.error_code, "message": result.message})
+        return result
+
+
+REDACTED_ARGS = {"first_name", "last_name", "date_of_birth"}
+
+
+def _traced_args(raw_args: dict[str, Any]) -> dict[str, Any]:
+    """Tool arguments for the trace, with identity details hidden."""
+    return {k: "[redacted]" if k in REDACTED_ARGS else v for k, v in raw_args.items()}
+
+
+def _execute(
+    session: Session, conversation: Conversation, name: str, raw_args: dict[str, Any], now: datetime | None
+) -> ToolResult:
     model, handler = TOOLS[name]
     try:
         args = model.model_validate(raw_args)
