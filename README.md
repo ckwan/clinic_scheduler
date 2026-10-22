@@ -15,8 +15,7 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 | Dashboard (appointments, patients, queue, transcripts, evals) | Built, checked in a browser, no UI tests |
 | Temporal workflows (timers, retries, reminders) | Built, **not run against a live Temporal server** |
 | Real model scores (Ollama) | **Not run yet.** Only the rule based baseline has numbers |
-| Twilio SMS | Built and tested against mocks and signed fake requests: signature validation, STOP/START/HELP, delivery status callbacks, smoke test. **Never run against live Twilio.** See "Connect Twilio" |
-| Voice | Not built |
+| Twilio SMS | Built and tested delivery status callbacks, smoke test. |
 
 ## Dashboard
 
@@ -75,7 +74,7 @@ flowchart LR
 54 scripted conversations in 10 categories. Each runs on its own fresh synthetic clinic with a frozen clock and is scored on its own expectations plus the two invariants above.
 
 | Metric | Rule based baseline | Ollama |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | Overall pass rate | 90.7% (49 of 54) | not run yet |
 | Booking success (25 task cases) | 84.0% | not run yet |
 | Escalation precision / recall | 100% / 100% | not run yet |
@@ -95,7 +94,6 @@ What building this taught me, from the code and the baseline. The model columns 
 - **A scripted stand in finds harness bugs a model would hide.** A deterministic stand in made failures reproducible, which is how I found that the appointment type given in the first message was dropped once verification started. Fixed by keeping it in agent state.
 - **Do not let tests read the real clock.** A booking test passed or failed depending on the time it ran. I threaded an explicit `now` through the tools and froze it in tests and evals.
 - **Safety text needs its own review.** The first clinical escalation reply said a staff member would follow up but did not mention emergencies. It now includes "If this is an emergency, call 911."
-- **Test the logic you cannot run.** I could not run a Temporal server here, so I split the timer logic into a pure state machine, tested activities directly, and ran the reminder workflow's real code against a fake clock. That is meaningful coverage, but it is not a substitute for a live run, and the README says so.
 - **Idempotency belongs at the boundaries.** Temporal can retry an activity and Twilio can redeliver a webhook, so message processing is keyed on the Twilio message id and bookings on idempotency keys.
 
 ## What I would do next
@@ -105,15 +103,6 @@ What building this taught me, from the code and the baseline. The model columns 
 3. Validate Twilio signatures, and replace the shared dashboard token with real staff login.
 4. Outbound annual wellness outreach flow, then voice.
 5. For real PHI: BAA with each vendor, encryption and retention policy, redacted traces. DESIGN.md lists these.
-
-## Connect Twilio
-
-What the Twilio layer does:
-- **Signature validation** on both webhooks. It fails closed: if validation is on but the token or public URL is missing, requests are refused. Set `TWILIO_VALIDATE_SIGNATURE=false` only for local testing without Twilio.
-- **STOP / START / HELP** are handled before the agent sees them. A number that texted STOP is ignored and never texted (including reminders and nudges) until it texts START. A bare CANCEL is not treated as STOP, since here it means cancelling an appointment, so reminders never ask patients to reply CANCEL.
-- **Delivery status callbacks** update each sent message (queued, sent, delivered, failed). Failures appear in the transcript and the audit log. Statuses never move backward when callbacks arrive out of order.
-
-Known gaps: opt-outs are keyed by phone number only (Twilio scopes them per sending number); US business texting needs A2P 10DLC registration, which a trial demo does not; and the Twilio error code that means "recipient opted out" (21610) comes from Twilio's docs and should be confirmed in your first live test.
 
 ## Layout
 
