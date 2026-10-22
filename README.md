@@ -4,7 +4,7 @@ An agentic SMS appointment scheduler for clinics, with an evaluation harness and
 
 A patient texts a clinic number. The agent verifies who they are, then books, reschedules, or cancels an appointment, confirms reminders, and hands off to a human when it should not continue. Staff review escalations, read transcripts, and see eval scores in a dashboard.
 
-**Stack:** Python, FastAPI, SQLAlchemy, PostgreSQL, LangGraph, LangSmith, Temporal, Twilio, Ollama or Claude, React, TypeScript, Tailwind, Docker.
+**Stack:** Python, FastAPI, SQLAlchemy, PostgreSQL, LangGraph, LangSmith, Temporal, Twilio, Ollama, React, TypeScript, Tailwind, Docker.
 
 ## Status, honestly
 
@@ -14,7 +14,7 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 | Eval harness (54 cases, 10 categories) | Built, runs offline in CI |
 | Dashboard (appointments, patients, queue, transcripts, evals) | Built, checked in a browser, no UI tests |
 | Temporal workflows (timers, retries, reminders) | Built, **not run against a live Temporal server** |
-| Real model scores (Ollama, Claude) | **Not run yet.** Only the rule based baseline has numbers |
+| Real model scores (Ollama) | **Not run yet.** Only the rule based baseline has numbers |
 | Twilio SMS | Built and tested against mocks and signed fake requests: signature validation, STOP/START/HELP, delivery status callbacks, smoke test. **Never run against live Twilio.** See "Connect Twilio" |
 | Voice | Not built |
 
@@ -22,7 +22,7 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 
 | Needs a human | Transcript and audit log |
 | --- | --- |
-| ![Escalation queue](docs/img/queue.png) | ![Transcript](docs/img/transcript.png) |
+| ![Escalation queue](docs/img/esculate.png) | ![Transcript](docs/img/transcript.png) |
 
 | Appointments | Patients, with Text patient |
 | --- | --- |
@@ -74,18 +74,18 @@ flowchart LR
 
 54 scripted conversations in 10 categories. Each runs on its own fresh synthetic clinic with a frozen clock and is scored on its own expectations plus the two invariants above.
 
-| Metric | Rule based baseline | Ollama | Claude |
+| Metric | Rule based baseline | Ollama |
 | --- | --- | --- | --- |
-| Overall pass rate | 90.7% (49 of 54) | not run yet | not run yet |
-| Booking success (25 task cases) | 84.0% | not run yet | not run yet |
-| Escalation precision / recall | 100% / 100% | not run yet | not run yet |
-| Verification bypass cases (target 0) | 0 | not run yet | not run yet |
-| Information leak cases (target 0) | 0 | not run yet | not run yet |
-| Structured output valid rate | 100% | not run yet | not run yet |
+| Overall pass rate | 90.7% (49 of 54) | not run yet |
+| Booking success (25 task cases) | 84.0% | not run yet |
+| Escalation precision / recall | 100% / 100% | not run yet |
+| Verification bypass cases (target 0) | 0 | not run yet |
+| Information leak cases (target 0) | 0 | not run yet |
+| Structured output valid rate | 100% | not run yet |
 
 The baseline is keyword and regex rules, not a model. It exists so evals run free, offline, and deterministically in CI, and as a floor to compare against. I wrote it with the cases in view, so its score says the harness and the code guardrails work, not how good any model is. It fails exactly five cases, all needing real language understanding: relative times ("Friday", "next Monday", "after 8am", "Sunday") and a first name sent alone before the rest of the identity details. A unit test pins that set, so a regression elsewhere shows up as a new failure.
 
-To fill the model columns: `make ollama-pull && make eval-ollama`, or `make eval-claude` with an API key. Results land in `evals/results/` and show in the dashboard.
+To fill the model columns: `make ollama-pull && make eval-ollama`. Results land in `evals/results/` and show in the dashboard.
 
 ## Lessons learned
 

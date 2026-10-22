@@ -5,3 +5,4 @@ Instructions.md
 DEMO.md
 DESIGN.md
 backend/migrations/script.py.mako
+.DS_Store
