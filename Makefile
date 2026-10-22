@@ -1,4 +1,4 @@
-.PHONY: langsmith-check up-all down-all seed-docker twilio-check demo dashboard up down install migrate seed run test eval eval-ollama eval-claude llm-check ollama-pull worker
+.PHONY: wellness-schedule langsmith-check up-all down-all seed-docker twilio-check demo dashboard up down install migrate seed run test eval eval-ollama eval-claude llm-check ollama-pull worker
 
 up:
 	docker compose up -d
@@ -60,3 +60,6 @@ twilio-check:
 
 langsmith-check:
 	cd backend && python3 -m app.agent.trace_check
+
+wellness-schedule:
+	cd backend && python3 -m app.booking.schedule

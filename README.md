@@ -21,7 +21,7 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 
 | Needs a human | Transcript and audit log |
 | --- | --- |
-| ![Escalation queue](docs/img/esculate_queue.png) | ![Transcript](docs/img/transcript.png) |
+| ![Escalation queue](docs/img/queue.png) | ![Transcript](docs/img/transcript.png) |
 
 | Appointments | Patients, with Text patient |
 | --- | --- |
@@ -34,6 +34,14 @@ Staff can pull any open conversation away from the agent with the Escalate butto
 ![Eval results](docs/img/evals.png)
 
 Pages: Overview, Appointments (filter by day and status, a confirmed column from reminder replies, and a link to the text thread that booked each one), Patients (a Text patient button that sends the first message of a conversation), Needs a human, Conversations (with an Escalate to a human button so staff can pull any conversation away from the agent), and Evals.
+
+## Patient booking link
+
+A patient can also book without texting back and forth. They get a text, tap a link, confirm their date of birth, and pick a time on a small mobile page. The booking goes through the same scheduling service as the SMS agent, so every guardrail still applies.
+
+![The booking link flow on a phone](docs/img/booking-flow.png)
+
+Staff send the link from the Patients tab, or a daily Temporal campaign texts patients who are due and nudges once. Details, rules, and files: `backend/app/booking/README.md`.
 
 ## The main design decision: guardrails live in code
 
@@ -67,10 +75,21 @@ flowchart LR
     AG -->|escalate| Q[Review queue]
     TW -->|reminders, retries, nudges| T
     UI[React dashboard] --> API
+
+    %% Booking link flow
+    UI -->|Send booking link| BK[Booking service]
+    CAMP[Temporal: wellness campaign] -->|due patients| BK
+    BK -->|text with link| T
+    T -->|SMS| PH[Patient phone]
+    PH -->|opens /book/token| PAGE[Booking page]
+    PAGE -->|date of birth, pick a time| BK
+    BK --> SVC
+    BK -->|confirmation, start reminders| TW
 ```
 
 - **LangGraph** decides what happens inside one exchange.
 - **Temporal** decides what happens over time and across failures: reply sending with retries, a nudge at 24h and close at 48h, and a reminder workflow per booking (text 24h before, flag if unconfirmed 12h later).
+- **Booking link** is a second front door. A patient taps a texted link, confirms their date of birth, and picks a time on a small page. It calls the same service layer as the agent, with no model in the path.
 - **FastAPI** is a thin HTTP layer. Business rules are in the service layer.
 
 ## Evaluation
@@ -79,15 +98,16 @@ flowchart LR
 
 | Metric | Rule based baseline | Ollama |
 | --- | --- | --- |
-| Overall pass rate | 90.7% (49 of 54) | not run yet |
-| Booking success (25 task cases) | 84.0% | not run yet |
-| Escalation precision / recall | 100% / 100% | not run yet |
-| Verification bypass cases (target 0) | 0 | not run yet |
-| Information leak cases (target 0) | 0 | not run yet |
-| Structured output valid rate | 100% | not run yet |
+| Overall pass rate | 90.7% (49 of 54) | 29.6% |
+| Booking success (25 task cases) | 84.0% | 0.0% |
+| Escalation precision / recall | 100% / 100% | 30.0% / 100.0% |
+| Verification bypass cases (target 0) | 0 | 0 |
+| Information leak cases (target 0) | 0 | 0 |
+| Structured output valid rate | 100% | 100.0% |
 
 The baseline is keyword and regex rules, not a model. It exists so evals run free, offline, and deterministically in CI, and as a floor to compare against. I wrote it with the cases in view, so its score says the harness and the code guardrails work, not how good any model is. It fails exactly five cases, all needing real language understanding: relative times ("Friday", "next Monday", "after 8am", "Sunday") and a first name sent alone before the rest of the identity details. A unit test pins that set, so a regression elsewhere shows up as a new failure.
 
+To fill the heuristic-baseline: `python3 -m app.evals.run --llm heuristic --label heuristic-baseline`
 To fill the model columns: `make ollama-pull && make eval-ollama`. Results land in `evals/results/` and show in the dashboard.
 
 ## Lessons learned
@@ -115,9 +135,11 @@ What building this taught me, from the code and the baseline. The model columns 
     backend/app/agent/       LangGraph graph, model providers, hand written replies
     backend/app/workflows/   Temporal workflows and activities
     backend/app/api/         dashboard API
+    backend/app/booking/     patient booking link (page API, outreach, campaign)
     backend/app/evals/       harness, metrics, rule based baseline
     evals/cases/             the 54 scripted conversations
     frontend/                React dashboard
+    frontend/src/booking/    patient booking page (/book/<token>)
 
 ## Data and privacy
 
