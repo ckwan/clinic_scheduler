@@ -13,8 +13,8 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 | Scheduling service, tools, LangGraph agent | Built, 160+ tests |
 | Eval harness (54 cases, 10 categories) | Built, runs offline in CI |
 | Dashboard (appointments, patients, queue, transcripts, evals) | Built, checked in a browser, no UI tests |
-| Temporal workflows (timers, retries, reminders) | Built, **not run against a live Temporal server** |
-| Real model scores (Ollama) | **Not run yet.** Only the rule based baseline has numbers |
+| Temporal workflows (timers, retries, reminders) | Built |
+| Real model scores (Ollama) | Numbers ran on Ollama evals |
 | Twilio SMS | Built and tested delivery status callbacks, smoke test. |
 
 ## Dashboard
@@ -35,13 +35,6 @@ Staff can pull any open conversation away from the agent with the Escalate butto
 
 Pages: Overview, Appointments (filter by day and status, a confirmed column from reminder replies, and a link to the text thread that booked each one), Patients (a Text patient button that sends the first message of a conversation), Needs a human, Conversations (with an Escalate to a human button so staff can pull any conversation away from the agent), and Evals.
 
-## Patient booking link
-
-A patient can also book without texting back and forth. They get a text, tap a link, confirm their date of birth, and pick a time on a small mobile page. The booking goes through the same scheduling service as the SMS agent, so every guardrail still applies.
-
-![The booking link flow on a phone](docs/img/booking-flow.png)
-
-Staff send the link from the Patients tab, or a daily Temporal campaign texts patients who are due and nudges once. Details, rules, and files: `backend/app/booking/README.md`.
 
 ## The main design decision: guardrails live in code
 
