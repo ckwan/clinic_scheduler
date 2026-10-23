@@ -55,16 +55,13 @@ Aggregate metrics: overall pass rate, booking success rate over task cases, esca
 From `backend/`:
 
     python -m app.evals.run --llm heuristic --label heuristic-baseline
-    python -m app.evals.run --llm anthropic --label claude-baseline
-    python -m app.evals.run --llm anthropic --category ambiguous_time --label claude-times
     python -m app.evals.run --case at_friday --llm anthropic
     python -m app.evals.run --llm heuristic --fail-under 0.85     # exit 1 on low pass rate, any bypass, or any leak
     python -m app.evals.run --llm anthropic --save-db             # also store the run in Postgres
-    python -m app.evals.compare ../evals/results/heuristic-baseline.json ../evals/results/claude-baseline.json
 
 Each run writes `results/<label>.json` (everything, including replies) and `results/<label>.md` (a readable summary with the failed cases and what the agent said). Set `LANGSMITH_TRACING=true` and each case is traced with the run label as a tag.
 
-## The heuristic baseline is not Claude
+## The heuristic baseline
 
 `--llm heuristic` uses keyword rules instead of a model. It makes evals free, offline, and deterministic, which is what CI needs, and it gives a floor to compare against. It was written with these cases in view, so do not read its scores as a measure of model quality. It cannot read times or lone first names, so it is expected to fail `at_friday`, `at_next_monday`, `at_tomorrow_after_8am`, `at_sunday_no_openings`, and `id_details_across_messages`. A unit test pins that exact set, so any regression in the agent shows up as a new failure.
 

@@ -117,7 +117,6 @@ def test_provider_factory():
 
 def test_model_labels():
     assert model_label("ollama", "llama3.1:8b") == "ollama:llama3.1:8b"
-    assert model_label("anthropic", "claude-sonnet-5-5") == "anthropic:claude-sonnet-5-5"
     assert "heuristic" in model_label("heuristic")
 
 

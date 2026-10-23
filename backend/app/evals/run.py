@@ -3,7 +3,6 @@
     python -m app.evals.run --llm heuristic --label heuristic-baseline
     python -m app.evals.run --llm ollama --label llama32-baseline
     python -m app.evals.run --llm ollama --model llama3.1:8b --label llama31-8b
-    python -m app.evals.run --llm anthropic --label claude-baseline
     python -m app.evals.run --llm heuristic --category adversarial --fail-under 1.0
 """
 

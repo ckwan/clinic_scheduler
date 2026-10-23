@@ -2,7 +2,7 @@
 
 Each case gets its own in-memory database built from the fixed eval world, so cases cannot
 affect each other and every run is repeatable. The model is the only thing that changes between
-runs: pass the heuristic stand in for a fast offline baseline, or the real Claude client.
+runs: pass the heuristic stand in for a fast offline baseline.
 
 Two kinds of checks:
 - the case's own expectations (end state, escalation, reply text)

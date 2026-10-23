@@ -1,4 +1,4 @@
-.PHONY: wellness-schedule langsmith-check up-all down-all seed-docker twilio-check demo dashboard up down install migrate seed run test eval eval-ollama eval-claude llm-check ollama-pull worker
+.PHONY: wellness-schedule langsmith-check up-all down-all seed-docker twilio-check demo dashboard up down install migrate seed run test eval eval-ollama llm-check ollama-pull worker
 
 up:
 	docker compose up -d
@@ -39,9 +39,6 @@ eval:
 
 eval-ollama:
 	cd backend && python3 -m app.evals.run --llm ollama --label ollama-baseline
-
-eval-claude:
-	cd backend && python3 -m app.evals.run --llm anthropic --label claude-baseline
 
 llm-check:
 	cd backend && python3 -m app.agent.check

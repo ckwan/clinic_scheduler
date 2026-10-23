@@ -34,12 +34,16 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
     anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-5-5"
 
     # How replies reach the patient: "twiml" answers inside the webhook response;
     # "temporal" hands the message to a durable workflow that sends the reply with retries.
     reply_mode: str = "twiml"
     temporal_task_queue: str = "clinicline"
+
+    # Patient booking links (app/booking). BOOKING_BASE_URL is where the patient page is served:
+    # the dashboard host (http://localhost:5173 in development, your public URL in production).
+    booking_base_url: str = "http://localhost:5173"
+    booking_link_ttl_days: int = 7
 
     # Dashboard. If dashboard_token is set, /api requires "Authorization: Bearer <token>".
     dashboard_token: str = ""

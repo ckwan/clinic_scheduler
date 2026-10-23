@@ -1,6 +1,6 @@
 """A rule based stand in for the model: keywords and regexes, no API calls.
 
-This is NOT Claude. It exists so the eval harness and CI run offline, deterministically, and
+It exists so the eval harness and CI run offline, deterministically, and
 for free, and so there is a floor to compare the real model against. It cannot read times
 ("Friday", "after 8am") or names without a date of birth next to them, so it is expected to fail
 those cases. Every result file records which model produced it.

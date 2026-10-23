@@ -122,12 +122,16 @@ def check_availability(
     latest: datetime | None = None,
     limit: int = 5,
     now: datetime | None = None,
+    max_results: int = MAX_AVAILABILITY_RESULTS,
 ) -> list[AvailableSlot]:
-    """Open future slots for the right kind of provider. Not patient data, so no verification."""
+    """Open future slots for the right kind of provider. Not patient data, so no verification.
+
+    The agent texts a few options, so it keeps the default cap of 10. The booking page shows a
+    whole calendar and passes a larger max_results."""
     specialty = _validate_type(appointment_type)
     now = now or utcnow()
     start = max(as_utc(earliest), now) if earliest else now
-    limit = max(1, min(limit, MAX_AVAILABILITY_RESULTS))
+    limit = max(1, min(limit, max_results))
 
     query = (
         select(Slot, Provider)
