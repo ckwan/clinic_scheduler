@@ -413,6 +413,11 @@ def list_patients(session: Session = Depends(get_session)) -> list[dict]:
                 "phone": mask_phone(patient.phone_number),
                 "opted_out": optout.is_opted_out(session, patient.phone_number),
                 "next_appointment": iso(upcoming[1].starts_at) if upcoming else None,
+                "last_wellness_visit_on": patient.last_wellness_visit_on.isoformat()
+                if patient.last_wellness_visit_on
+                else None,
+                "due_for_wellness": patient.last_wellness_visit_on is None
+                or (now.date() - patient.last_wellness_visit_on).days >= 365,
                 "last_outreach_at": iso(last_outreach.created_at) if last_outreach else None,
             }
         )

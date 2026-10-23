@@ -6,6 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dashboard import router as dashboard_router
+from app.booking.api import public_router as booking_public_router
+from app.booking.api import staff_router as booking_staff_router
 from app.agent.llm import LLM
 from app.agent.providers import make_llm
 from app.agent.runner import handle_inbound_message
@@ -19,6 +21,8 @@ from app.services.delivery import record_delivery_status
 
 app = FastAPI(title="Clinic Scheduler", version="0.1.0", docs_url="/api/docs", openapi_url="/api/openapi.json")
 app.include_router(dashboard_router)
+app.include_router(booking_staff_router)
+app.include_router(booking_public_router)
 
 
 def get_llm() -> LLM:

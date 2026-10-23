@@ -60,6 +60,8 @@ class Patient(Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
     phone_number: Mapped[str] = mapped_column(String(32), nullable=False)
+    # When the patient last had a wellness visit. Null means never or unknown, which counts as due.
+    last_wellness_visit_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
     __table_args__ = (UniqueConstraint("clinic_id", "phone_number", name="uq_patient_clinic_phone"),)
@@ -141,6 +143,26 @@ class Message(Base):
     created_at: Mapped[datetime] = _created_at()
 
     conversation: Mapped[Conversation] = relationship(back_populates="messages")
+
+
+class BookingLink(Base):
+    """A one patient, one purpose link texted to a patient (see app/booking).
+
+    Only the SHA-256 hash of the token is stored, so a database leak cannot be used to book."""
+
+    __tablename__ = "booking_links"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id"), nullable=False)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id"), nullable=False)
+    appointment_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    failed_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    appointment_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("appointments.id"), nullable=True)
+    created_at: Mapped[datetime] = _created_at()
 
 
 class SmsOptOut(Base):

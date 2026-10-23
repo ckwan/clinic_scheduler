@@ -21,7 +21,7 @@ A patient texts a clinic number. The agent verifies who they are, then books, re
 
 | Needs a human | Transcript and audit log |
 | --- | --- |
-| ![Escalation queue](docs/img/queue.png) | ![Transcript](docs/img/transcript.png) |
+| ![Escalation queue](docs/img/needs_human.png) | ![Transcript](docs/img/transcript.png) |
 
 | Appointments | Patients, with Text patient |
 | --- | --- |
