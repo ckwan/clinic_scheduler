@@ -1,7 +1,7 @@
 # Eval run: heuristic-baseline
 
 Model: `heuristic (rule based stand in, not a real model)`  
-Run at: 2026-10-21T06:36:21+00:00  
+Run at: 2026-10-22T23:37:13+00:00  
 Cases: 54 (49 passed)
 
 ## Metrics
@@ -16,7 +16,7 @@ Cases: 54 (49 passed)
 | Information leak cases (target 0) | 0 |
 | Structured output valid rate | 100.0% |
 | Average turns to complete a task | 3.67 |
-| Average seconds per case | 0.021 |
+| Average seconds per case | 0.008 |
 
 ## By category
 
