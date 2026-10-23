@@ -58,7 +58,7 @@ export default function App() {
           <p className="text-xs text-slate-500">Synthetic data only</p>
         </div>
         <div className="flex gap-2 text-xs">
-          <input aria-label="Your name" value={staffName} onChange={(e) => { setStaffName(e.target.value); try { localStorage.setItem('clinic_scheduler.staff', e.target.value) } catch { /* not remembered */ } }} className="w-24 rounded-lg border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-700" />
+          <input aria-label="Your name" value={staffName} onChange={(e) => { setStaffName(e.target.value); try { localStorage.setItem('clinicScheduler.staff', e.target.value) } catch { /* not remembered */ } }} className="w-24 rounded-lg border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-700" />
           <input aria-label="API token" type="password" placeholder="API token" value={token} onChange={(e) => { setTokenState(e.target.value); setToken(e.target.value) }} onBlur={() => window.location.reload()} className="w-28 rounded-lg border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-700" />
         </div>
       </header>

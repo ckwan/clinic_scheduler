@@ -85,6 +85,8 @@ export type PatientRow = {
   opted_out: boolean
   next_appointment: string | null
   last_outreach_at: string | null
+  last_wellness_visit_on: string | null
+  due_for_wellness: boolean
 }
 
 export type EvalRunSummary = { label: string; model: string; created_at: string; metrics: Metrics }
@@ -166,6 +168,8 @@ export const api = {
     return request<AppointmentRow[]>(`/appointments?${params}`)
   },
   patients: () => request<PatientRow[]>('/patients'),
+  sendBookingLink: (id: string, staff_name: string) =>
+    post<{ conversation_id: string }>(`/patients/${id}/booking-link`, { staff_name }),
   textPatient: (id: string, staff_name: string) =>
     post<{ conversation_id: string }>(`/patients/${id}/outreach`, { staff_name }),
   evalRuns: () => request<EvalRunSummary[]>('/evals'),
